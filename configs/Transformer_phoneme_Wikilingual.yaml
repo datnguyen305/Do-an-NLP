@@ -58,5 +58,5 @@ training:
   warmup: 1000
   patience: 5
   score: rouge-L
-
+TOKENIZER: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/train.json/kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/train.json
 task: TextSumTaskPhoneme
