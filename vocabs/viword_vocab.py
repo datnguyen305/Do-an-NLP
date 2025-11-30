@@ -37,7 +37,7 @@ class ViWordVocab(Vocab):
         
         self.specials = [self.padding_token, self.bos_token, self.eos_token, self.unk_token]
 
-        self.padding_idx = 0
+        self.pad_idx = 0
         self.bos_idx = 1
         self.eos_idx = 2
         self.unk_idx = 3
