@@ -3,8 +3,7 @@ from torch import nn
 
 class TokenEmbedding(nn.Embedding):
     """
-    Token Embedding using torch.nn
-    they will dense representation of word using weighted matrix
+    Phoneneme Token Embedding using torch.nn
     """
 
     def __init__(self, vocab_size, d_model):
@@ -14,4 +13,4 @@ class TokenEmbedding(nn.Embedding):
         :param vocab_size: size of vocabulary
         :param d_model: dimensions of model
         """
-        super(TokenEmbedding, self).__init__(vocab_size, d_model, padding_idx=1)
+        super(TokenEmbedding, self).__init__(vocab_size, d_model, padding_idx=0)
