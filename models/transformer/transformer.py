@@ -181,37 +181,34 @@ class TransformerModel(nn.Module):
 
     def forward(self, src, trg):
         # 1. Prepare Masks
-        # src_key_padding_mask: True ở nơi là PAD
         src_pad_mask = (src == self.vocab.pad_idx) 
         
-        # trg mask: Kết hợp Causal Mask và Padding Mask (nếu cần)
+        # trg mask: Dùng trg gốc (indices) để tạo mask là đúng rồi
         trg_causal_mask = self.make_trg_mask(trg)
         
         # 2. Embedding + Positional
-        src = self.pos_encoding(self.src_embedding(src))
-        trg = self.pos_encoding(self.trg_embedding(trg))
+        # SỬA LỖI Ở ĐÂY: Không ghi đè lên biến trg gốc
+        src_emb = self.pos_encoding(self.src_embedding(src))
+        trg_emb = self.pos_encoding(self.trg_embedding(trg)) # Đổi tên thành trg_emb
         
-        # 3. Encoder (Dùng hàm chuẩn PyTorch)
-        # src_key_padding_mask tự động xử lý việc bỏ qua token PAD
-        enc_src = self.encoder(src, src_key_padding_mask=src_pad_mask)
+        # 3. Encoder 
+        enc_src = self.encoder(src_emb, src_key_padding_mask=src_pad_mask)
         
-        # 4. Decoder (Chạy loop qua các layers)
-        out = trg
-        # Với F.scaled_dot_product_attention, mask cần shape broadcast được
-        # Ta xử lý mask đơn giản cho training
+        # 4. Decoder
+        out = trg_emb # Dùng trg_emb để đưa vào mạng
+        
         for layer in self.decoder_layers:
-            # Lưu ý: Custom DecoderLayer của ta đang nhận mask dạng attention bias
-            # Để đơn giản hoá cho training, ta dùng mask tam giác cho trg
-            out, _ = layer(out, enc_src, trg_causal_mask, None) # src_mask xử lý sau nếu cần kỹ hơn
+            # Lưu ý: trg_causal_mask vẫn dùng được
+            out, _ = layer(out, enc_src, trg_causal_mask, None)
             
         output = self.fc_out(out)
         
-        # Tính loss
+        # 5. Tính loss
         output_flat = output.view(-1, output.size(-1))
-        trg_flat = trg.view(-1) # [Batch*Seq]
         
-        # Shift targets: Input [A, B, C] -> Output [B, C, EOS] (Đã xử lý ở Dataloader hoặc ở đây)
-        # Giả sử Dataloader đã shift label
+        # SỬA LỖI Ở ĐÂY: Dùng trg gốc (indices) để tính loss
+        trg_flat = trg.contiguous().view(-1) 
+        
         loss = self.loss_fn(output_flat, trg_flat)
         return output, loss
 
