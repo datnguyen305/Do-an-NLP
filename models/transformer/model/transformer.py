@@ -106,7 +106,6 @@ class TransformerModel(nn.Module):
             
             # Lấy từ mới nhất
             next_token = decoder_output[:, -1, :].argmax(dim=-1, keepdim=True)
-            print("Step token:", next_token.squeeze().tolist())
 
             # Append
             outputs.append(next_token)
