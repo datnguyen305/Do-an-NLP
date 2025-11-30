@@ -17,7 +17,7 @@ class TransformerModel(nn.Module):
         self.trg_pad_idx = vocab.pad_idx
         self.trg_bos_idx = vocab.bos_idx
         self.trg_eos_idx = vocab.eos_idx
-        
+    
         self.encoder = Encoder(config.encoder, vocab)
 
         self.decoder = Decoder(config.decoder, vocab)
@@ -93,7 +93,7 @@ class TransformerModel(nn.Module):
         batch_size = src.size(0)
         # Khởi tạo chuỗi đích là [B, 1] với token SOS
         trg_tokens = torch.full((batch_size, 1), 
-                                self.trg_sos_idx, 
+                                self.trg_bos_idx, 
                                 dtype=torch.long, 
                                 device=self.device)
         
