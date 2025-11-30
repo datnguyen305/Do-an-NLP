@@ -75,6 +75,13 @@ class TransformerModel(nn.Module):
         Returns:
             torch.Tensor: Chuỗi đích dự đoán, shape [batch_size, max_decoded_len] (không bao gồm token SOS).
         """
+        # Cắt src nếu quá dài
+        if src.shape[1] > self.max_len:
+            src = src[:, :self.max_len]
+
+        # Cắt trg nếu quá dài
+        if trg.shape[1] > self.max_len:
+            trg = trg[:, :self.max_len]
         # 1. Mã hóa chuỗi nguồn một lần
         src_mask = self.make_src_mask(src)
         enc_src = self.encoder(src, src_mask)   # [B, src_len, d_model]
