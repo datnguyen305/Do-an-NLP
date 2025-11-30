@@ -26,21 +26,11 @@ class TransformerModel(nn.Module):
         self.device = config.device 
         self.config = config
         self.vocab = vocab
-
+        self.max_len = vocab.max_sentence_length + 2
         self.loss = nn.CrossEntropyLoss(ignore_index=self.trg_pad_idx)
 
 
     def forward(self, src, trg):
-        config = self.config
-        
-        # Cắt src nếu quá dài
-        if src.shape[1] > config.max_len:
-            src = src[:, :config.max_len]
-
-        # Cắt trg nếu quá dài
-        if trg.shape[1] > config.max_len:
-            trg = trg[:, :config.max_len]
-
         src_mask = self.make_src_mask(src)
         trg_mask = self.make_trg_mask(trg)
         enc_src = self.encoder(src, src_mask)
