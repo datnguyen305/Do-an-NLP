@@ -35,7 +35,8 @@ model:
   d_model: 512
   max_len: 1024
   device: cuda
-  
+  n_head: 8
+  ffn_hidden: 2048 
   # --- SỬA THAM SỐ KHỚP VỚI CODE TRANSFORMER MỚI ---
   encoder:
     n_layers: 6
