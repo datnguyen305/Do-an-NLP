@@ -30,10 +30,10 @@ class ViWordVocab(Vocab):
         self.specials = [self.padding_token]
 
     def initialize_special_tokens(self, config) -> None:
-        self.padding_token = config.PAD_TOKEN
-        self.bos_token = config.BOS_TOKEN
-        self.eos_token = config.EOS_TOKEN
-        self.unk_token = config.UNK_TOKEN
+        self.padding_token = config.pad_token
+        self.bos_token = config.bos_token
+        self.eos_token = config.eos_token
+        self.unk_token = config.unk_token
         
         self.specials = [self.padding_token, self.bos_token, self.eos_token, self.unk_token]
 
