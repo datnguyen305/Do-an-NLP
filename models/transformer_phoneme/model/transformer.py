@@ -9,7 +9,7 @@ from builders.model_builder import META_ARCHITECTURE
 
 
 @META_ARCHITECTURE.register()
-class TransformerModel(nn.Module):
+class TransformerPhonemeModel(nn.Module):
 
     def __init__(self, config, vocab: Vocab):
         super().__init__()
@@ -82,49 +82,42 @@ class TransformerModel(nn.Module):
         if src.shape[1] > config.max_len:
             src = src[:, :config.max_len]
 
-        # 1. Tạo mask cho chuỗi nguồn và mã hóa
+        # Tạo mask cho chuỗi nguồn
         src_mask = self.make_src_mask(src)
+        
+        # Lấy đầu ra từ bộ mã hóa
         enc_src = self.encoder(src, src_mask)   # [B, src_len, d_model]
         
-        # 2. Chuẩn bị đầu vào ban đầu cho bộ giải mã là token BOS
+        # Chuẩn bị đầu vào ban đầu cho bộ giải mã là token BOS
         batch_size = src.size(0)
-        # Sử dụng device của src để đảm bảo tính nhất quán
         decoder_input = torch.full((batch_size, 1), self.trg_bos_idx, dtype=torch.long, device=src.device)
         
-        # outputs dùng để lưu kết quả dự đoán (trừ BOS)
-        
-        # 3. Tạo dự đoán từng bước (Autoregressive Decoding)
+        # Khởi tạo trạng thái ẩn cho bộ giải mã
+        decoder_hidden = None
+        outputs = []
+
+        # Tạo dự đoán từng bước
         for _ in range(config.max_len):
-            
-            # Tạo mask cho chuỗi đích (Trg mask sẽ tự động mở rộng theo trg_len)
+            # Tạo mask cho chuỗi đích
             trg_mask = self.make_trg_mask(decoder_input)
             
             # Lấy đầu ra của bộ giải mã
-            # decoder_output: [B, current_trg_len, vocab_size]
             decoder_output = self.decoder(decoder_input, enc_src, trg_mask, src_mask)
             
-            # Lấy từ mới nhất (từ cuối cùng của chuỗi)
-            # next_token_logits: [B, vocab_size]
-            next_token_logits = decoder_output[:, -1, :] 
-            
-            # Chọn token có xác suất cao nhất (Greedy Decoding)
-            # next_token: [B, 1]
-            next_token = next_token_logits.argmax(dim=-1, keepdim=True)
+            # Lấy từ mới nhất
+            next_token = decoder_output[:, -1, :].argmax(dim=-1, keepdim=True)
 
-            # --- KIỂM TRA ĐIỀU KIỆN DỪNG ---
-            # Nếu tất cả các chuỗi trong batch đã dự đoán ra EOS, hoặc nếu độ dài vượt quá max_len
-            
+            # Append
+            outputs.append(next_token)
+
             # Dùng nó làm input cho bước tiếp theo
             decoder_input = torch.cat([decoder_input, next_token], dim=1)
             
-            # Kiểm tra xem token EOS đã được dự đoán ở tất cả các chuỗi chưa
-            # Ta chỉ cần kiểm tra token mới nhất được thêm vào
+            # Nếu gặp token EOS, dừng lại
             if (next_token == self.trg_eos_idx).all():
                 break
 
-        # 4. Loại bỏ token BOS ban đầu
-        # Outputs: [B, trg_len] (chứa BOS, các token dự đoán, và có thể là EOS)
-        # Ta cần loại bỏ BOS token ở vị trí đầu tiên
-        final_outputs = decoder_input[:, 1:]
+        # Nối tất cả các token dự đoán thành một tensor duy nhất
+        outputs = torch.cat(outputs, dim=1)
         
-        return final_outputs
+        return outputs
