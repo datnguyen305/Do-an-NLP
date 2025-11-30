@@ -1,19 +1,23 @@
 vocab:
   type: ViWordVocab
-  path:
-    train: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/train.json
-    dev: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/dev.json
-    test: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/test.json
+  # --- SỬA ĐỂ KHỚP VỚI ViWordVocab CODE ---
+  # Code gọi config.TRAIN nên phải khai báo trực tiếp ở đây, không lồng trong "path"
+  TRAIN: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/train.json
+  DEV: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/dev.json
+  TEST: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/test.json
+  # Code __init__ gọi make_vocab(config.JSON_PATH)
+  JSON_PATH: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/train.json
+  TOKENIZER: null # Nếu không dùng tokenizer ngoài thì để null
+  
   min_freq: 3
   bos_token: <bos>
   eos_token: <eos>
   unk_token: <unk>
   pad_token: <pad>
-  TOKENIZER: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/train.json/kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/train.json
 
 dataset:
   train: 
-    type: TextSumDatasetPhoneme
+    type: TextSumDatasetPhoneme # Đảm bảo tên class Dataset trong code là TextSumDatasetPhoneme
     path: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/train.json
   dev:
     type: TextSumDatasetPhoneme
@@ -26,39 +30,32 @@ dataset:
 
 model:
   name: Transformer_Phoneme_Wikilingual
-  architecture: Transformer_Phoneme_Model
+  # Đảm bảo tên class Model đã đăng ký là TransformerModel (hoặc sửa trong config này thành TransformerModel)
+  architecture: TransformerModel 
   d_model: 512
-  n_layers: 6
-  n_head: 8
-  ffn_hidden: 2048
-  drop_prob: 0.1
   max_len: 1024
-  encoder:
-    d_model: 512
-    n_head: 8
-    ffn_hidden: 2048
-    drop_prob: 0.1
-    n_layers: 6
-    max_len: 1024
-    device: cuda
-  decoder:
-    d_model: 512
-    n_head: 8
-    ffn_hidden: 2048
-    drop_prob: 0.1
-    n_layers: 6
-    max_len: 1024
-    device: cuda
-  label_smoothing: 0.1
   device: cuda
+  
+  # --- SỬA THAM SỐ KHỚP VỚI CODE TRANSFORMER MỚI ---
+  encoder:
+    n_layers: 6
+    n_heads: 8        # Code dùng n_heads (có s)
+    d_ff: 2048        # Code dùng d_ff (thay vì ffn_hidden)
+    dropout: 0.1      # Code dùng dropout (thay vì drop_prob)
+  
+  decoder:
+    n_layers: 6
+    n_heads: 8
+    d_ff: 2048
+    dropout: 0.1
 
 training:
   checkpoint_path: "checkpoints"
-  learning_rate: 0.15   
+  # QUAN TRỌNG: Giảm LR xuống. 0.15 là quá lớn cho Transformer, sẽ gây lỗi.
+  learning_rate: 0.0005 
   lr_coverage: 0.15
-  warmup: 1000
+  warmup: 4000
   patience: 5
   score: rouge-L
 
-TOKENIZER: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/train.json/kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/train.json
-task: TextSumTaskPhoneme
+task: TextSumTask # Đảm bảo khớp với tên @META_TASK.register() trong file task
