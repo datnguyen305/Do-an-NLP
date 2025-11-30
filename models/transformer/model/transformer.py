@@ -1,3 +1,4 @@
+from logging import config
 import torch
 from torch import nn
 
@@ -26,11 +27,19 @@ class TransformerModel(nn.Module):
         self.device = config.device 
         self.config = config
         self.vocab = vocab
-        self.max_len = vocab.max_sentence_length + 2
+        self.max_len = config.max_len
         self.loss = nn.CrossEntropyLoss(ignore_index=self.trg_pad_idx)
 
 
     def forward(self, src, trg):
+        # Cắt src nếu quá dài
+        if src.shape[1] > self.max_len:
+            src = src[:, :self.max_len]
+
+        # Cắt trg nếu quá dài
+        if trg.shape[1] > self.max_len:
+            trg = trg[:, :self.max_len]
+
         src_mask = self.make_src_mask(src)
         trg_mask = self.make_trg_mask(trg)
         enc_src = self.encoder(src, src_mask)
@@ -46,23 +55,14 @@ class TransformerModel(nn.Module):
         return output, loss
 
     def make_src_mask(self, src):
-        # max_seq_len = src.shape[1]  # Lấy độ dài thực tế
-        # src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
-        # src_mask = src_mask[:, :, :max_seq_len, :max_seq_len]  # Cắt mask phù hợp
-        # return src_mask
-
-        """src: [B, src_len]
-        return: [B,1,1,src_len] bool mask (True = not pad)"""
         src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
         return src_mask
-
 
     def make_trg_mask(self, trg):
         trg_pad_mask = (trg != self.trg_pad_idx).unsqueeze(1).unsqueeze(3)
         trg_len = trg.shape[1]
-        # trg_sub_mask = torch.tril(torch.ones(trg_len, trg_len)).type(torch.ByteTensor).to(self.device)
-        trg_sub_mask = torch.tril(torch.ones(trg_len, trg_len, device=self.device)).bool()
-        trg_mask = trg_pad_mask & trg_sub_mask # [B,1,T,T]
+        trg_sub_mask = torch.tril(torch.ones(trg_len, trg_len)).type(torch.ByteTensor).to(self.device)
+        trg_mask = trg_pad_mask & trg_sub_mask
         return trg_mask
     
     def predict(self, src: torch.Tensor) -> torch.Tensor:
