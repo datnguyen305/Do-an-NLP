@@ -31,7 +31,7 @@ dataset:
 model:
   name: Transformer_Phoneme_Wikilingual
   # Đảm bảo tên class Model đã đăng ký là TransformerModel (hoặc sửa trong config này thành TransformerModel)
-  architecture: TransformerModel 
+  architecture: Transformer_Phoneme_Model 
   d_model: 512
   max_len: 1024
   device: cuda
@@ -61,4 +61,4 @@ training:
   patience: 5
   score: rouge-L
 
-task: TextSumTask # Đảm bảo khớp với tên @META_TASK.register() trong file task
+task: TextSumTaskPhoneme # Đảm bảo khớp với tên @META_TASK.register() trong file task
