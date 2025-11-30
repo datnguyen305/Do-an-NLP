@@ -71,56 +71,42 @@ class TransformerModel(nn.Module):
         return trg_mask
     
     def predict(self, src: torch.Tensor) -> torch.Tensor:
-        """
-        Thực hiện Greedy Decoding để dự đoán chuỗi đích.
-
-        Args:
-            src (torch.Tensor): Chuỗi nguồn, shape [batch_size, src_len] (chứa token IDs).
-            
-        Returns:
-            torch.Tensor: Chuỗi đích dự đoán, shape [batch_size, max_decoded_len] (không bao gồm token SOS).
-        """
-        # Cắt src nếu quá dài
         if src.shape[1] > self.max_len:
             src = src[:, :self.max_len]
-        # 1. Mã hóa chuỗi nguồn một lần
+            
         src_mask = self.make_src_mask(src)
-        enc_src = self.encoder(src, src_mask)   # [B, src_len, d_model]
+        enc_src = self.encoder(src, src_mask)
         
-        # 2. Khởi tạo đầu vào giải mã bằng token SOS
         batch_size = src.size(0)
-        # Khởi tạo chuỗi đích là [B, 1] với token SOS
         trg_tokens = torch.full((batch_size, 1), 
                                 self.trg_bos_idx, 
                                 dtype=torch.long, 
                                 device=self.device)
         
-        # 3. Vòng lặp giải mã từng bước
+        # Tạo mask để theo dõi câu nào đã xong (gặp EOS)
+        finished_sentences = torch.zeros(batch_size, dtype=torch.bool, device=self.device)
+
         for _ in range(self.max_len):
-            
-            # Tạo mask cho chuỗi đích hiện tại
             trg_mask = self.make_trg_mask(trg_tokens)
             
-            # Giải mã
-            # output: [B, current_trg_len, dec_voc_size]
-            output = self.decoder(trg_tokens, enc_src, trg_mask, src_mask)
+            # Optimization: Sử dụng mixed precision (AMP) nếu GPU hỗ trợ để nhanh hơn
+            with torch.cuda.amp.autocast(enabled=True): 
+                output = self.decoder(trg_tokens, enc_src, trg_mask, src_mask)
+                next_token_logits = output[:, -1, :]
+                next_token = next_token_logits.argmax(dim=-1, keepdim=True)
             
-            # Lấy logits của token tiếp theo (token cuối cùng của chuỗi)
-            # next_token_logits: [B, dec_voc_size]
-            next_token_logits = output[:, -1, :] 
+            # Cập nhật trạng thái các câu đã xong
+            # Nếu câu đã xong trước đó, token tiếp theo vẫn giữ nguyên (hoặc padding),
+            # nhưng logic này giúp ta biết khi nào break sớm.
+            current_eos = (next_token == self.trg_eos_idx).squeeze()
+            finished_sentences = finished_sentences | current_eos
             
-            # Chọn token có xác suất cao nhất (Greedy)
-            # next_token: [B, 1]
-            next_token = next_token_logits.argmax(dim=-1, keepdim=True)
-            
-            # Nối token mới vào chuỗi đích
-            # trg_tokens: [B, current_trg_len + 1]
+            # Chỉ nối token mới vào. 
+            # (Lưu ý: Logic đơn giản này vẫn nối token sau EOS, ta sẽ cắt bỏ sau)
             trg_tokens = torch.cat([trg_tokens, next_token], dim=1)
             
-            # Kiểm tra điều kiện dừng: nếu tất cả các chuỗi trong batch đã dự đoán EOS
-            if (next_token == self.trg_eos_idx).all():
+            # Điều kiện dừng: Khi TẤT CẢ các câu đều đã từng gặp EOS
+            if finished_sentences.all():
                 break
 
-        # 4. Trả về kết quả (loại bỏ token SOS ban đầu)
-        # 
         return trg_tokens[:, 1:]
