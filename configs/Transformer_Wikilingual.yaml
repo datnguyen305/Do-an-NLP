@@ -34,7 +34,7 @@ model:
   max_len: 1024
   encoder:
     d_model: 512
-    n_head: 8
+    n_heads: 8
     ffn_hidden: 2048
     drop_prob: 0.1
     n_layers: 6
@@ -42,7 +42,7 @@ model:
     device: cuda
   decoder:
     d_model: 512
-    n_head: 8
+    n_heads: 8
     ffn_hidden: 2048
     drop_prob: 0.1
     n_layers: 6
