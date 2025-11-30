@@ -76,48 +76,53 @@ class TransformerModel(nn.Module):
         return trg_mask
     
     def predict(self, src: torch.Tensor) -> torch.Tensor:
-        config = self.config
+        """
+        Thực hiện Greedy Decoding để dự đoán chuỗi đích.
 
-        # Cắt src nếu quá dài
-        if src.shape[1] > config.max_len:
-            src = src[:, :config.max_len]
-
-        # Tạo mask cho chuỗi nguồn
+        Args:
+            src (torch.Tensor): Chuỗi nguồn, shape [batch_size, src_len] (chứa token IDs).
+            
+        Returns:
+            torch.Tensor: Chuỗi đích dự đoán, shape [batch_size, max_decoded_len] (không bao gồm token SOS).
+        """
+        # 1. Mã hóa chuỗi nguồn một lần
         src_mask = self.make_src_mask(src)
-        
-        # Lấy đầu ra từ bộ mã hóa
         enc_src = self.encoder(src, src_mask)   # [B, src_len, d_model]
         
-        # Chuẩn bị đầu vào ban đầu cho bộ giải mã là token BOS
+        # 2. Khởi tạo đầu vào giải mã bằng token SOS
         batch_size = src.size(0)
-        decoder_input = torch.full((batch_size, 1), self.trg_bos_idx, dtype=torch.long, device=src.device)
+        # Khởi tạo chuỗi đích là [B, 1] với token SOS
+        trg_tokens = torch.full((batch_size, 1), 
+                                self.trg_sos_idx, 
+                                dtype=torch.long, 
+                                device=self.device)
         
-        # Khởi tạo trạng thái ẩn cho bộ giải mã
-        decoder_hidden = None
-        outputs = []
-
-        # Tạo dự đoán từng bước
-        for _ in range(config.max_len):
-            # Tạo mask cho chuỗi đích
-            trg_mask = self.make_trg_mask(decoder_input)
+        # 3. Vòng lặp giải mã từng bước
+        for _ in range(self.max_len):
             
-            # Lấy đầu ra của bộ giải mã
-            decoder_output = self.decoder(decoder_input, enc_src, trg_mask, src_mask)
+            # Tạo mask cho chuỗi đích hiện tại
+            trg_mask = self.make_trg_mask(trg_tokens)
             
-            # Lấy từ mới nhất
-            next_token = decoder_output[:, -1, :].argmax(dim=-1, keepdim=True)
-
-            # Append
-            outputs.append(next_token)
-
-            # Dùng nó làm input cho bước tiếp theo
-            decoder_input = torch.cat([decoder_input, next_token], dim=1)
+            # Giải mã
+            # output: [B, current_trg_len, dec_voc_size]
+            output = self.decoder(trg_tokens, enc_src, trg_mask, src_mask)
             
-            # Nếu gặp token EOS, dừng lại
+            # Lấy logits của token tiếp theo (token cuối cùng của chuỗi)
+            # next_token_logits: [B, dec_voc_size]
+            next_token_logits = output[:, -1, :] 
+            
+            # Chọn token có xác suất cao nhất (Greedy)
+            # next_token: [B, 1]
+            next_token = next_token_logits.argmax(dim=-1, keepdim=True)
+            
+            # Nối token mới vào chuỗi đích
+            # trg_tokens: [B, current_trg_len + 1]
+            trg_tokens = torch.cat([trg_tokens, next_token], dim=1)
+            
+            # Kiểm tra điều kiện dừng: nếu tất cả các chuỗi trong batch đã dự đoán EOS
             if (next_token == self.trg_eos_idx).all():
                 break
 
-        # Nối tất cả các token dự đoán thành một tensor duy nhất
-        outputs = torch.cat(outputs, dim=1)
-        
-        return outputs
+        # 4. Trả về kết quả (loại bỏ token SOS ban đầu)
+        # 
+        return trg_tokens[:, 1:]
