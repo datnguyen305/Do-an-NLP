@@ -16,7 +16,7 @@ class ViWordVocab(Vocab):
 
         self.initialize_special_tokens(config)
         
-        phonemes = self.make_vocab(config.JSON_PATH)
+        phonemes = self.make_vocab(config)
         phonemes = list(phonemes)
         self.itos = {
             i: tok for i, tok in enumerate(self.specials + phonemes)
