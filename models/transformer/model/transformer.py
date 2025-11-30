@@ -78,10 +78,6 @@ class TransformerModel(nn.Module):
         # Cắt src nếu quá dài
         if src.shape[1] > self.max_len:
             src = src[:, :self.max_len]
-
-        # Cắt trg nếu quá dài
-        if trg.shape[1] > self.max_len:
-            trg = trg[:, :self.max_len]
         # 1. Mã hóa chuỗi nguồn một lần
         src_mask = self.make_src_mask(src)
         enc_src = self.encoder(src, src_mask)   # [B, src_len, d_model]
