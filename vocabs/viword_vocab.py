@@ -91,21 +91,21 @@ class ViWordVocab(Vocab):
 
     def encode_caption(self, caption: List[str]) -> torch.Tensor:
         syllables = [
-            (self.bos_idx, self.padding_idx, self.padding_idx, self.padding_idx)
+            (self.bos_idx, self.pad_idx, self.pad_idx, self.pad_idx)
         ]
         for word in caption:
             components = analyze_Vietnamese(word)
             if components:
                 syllables.append([
-                    self.stoi[phoneme] if phoneme else self.padding_idx for phoneme in components
+                    self.stoi[phoneme] if phoneme else self.pad_idx for phoneme in components
                 ])
             else:
                 syllables.append(
-                    (self.unk_idx, self.padding_idx, self.padding_idx, self.padding_idx)
+                    (self.unk_idx, self.pad_idx, self.pad_idx, self.pad_idx)
                 )
 
         syllables.append(
-            (self.eos_idx, self.padding_idx, self.padding_idx, self.padding_idx)
+            (self.eos_idx, self.pad_idx, self.pad_idx, self.pad_idx)
         )
 
         vec = torch.tensor(syllables).long()
