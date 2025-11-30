@@ -54,7 +54,7 @@ class TextSumTask(BaseTask):
 
     def train(self):
         self.model.train()
-        train_losses = []
+
         running_loss = .0
         with tqdm(desc='Epoch %d - Training' % (self.epoch+1), unit='it', total=len(self.train_dataloader)) as pbar:
             for it, items in enumerate(self.train_dataloader):
@@ -70,21 +70,17 @@ class TextSumTask(BaseTask):
                 self.optim.zero_grad()
                 loss.backward()
                 self.optim.step()
-                current_loss = loss.item()
-                running_loss += current_loss
-                train_losses.append(current_loss)
+                running_loss += loss.item()
 
                 # update the training status
                 pbar.set_postfix(loss=running_loss / (it + 1))
                 pbar.update()
                 self.scheduler.step()
-        return train_losses
 
     def evaluate_metrics(self, dataloader: DataLoader) -> dict:
         self.model.eval()
         gens = {}
         gts = {}
-        all_oov_rates = []
         with tqdm(desc='Epoch %d - Evaluating' % (self.epoch+1), unit='it', total=len(dataloader)) as pbar:
             for items in dataloader:
                 items = items.to(self.device)
@@ -92,11 +88,7 @@ class TextSumTask(BaseTask):
                 label = items.label
                 with torch.no_grad():
                     prediction = self.model.predict(input_ids)
-                    # --- TÍNH TOÁN OOV RATE ---
-                    # Gọi hàm tính OOV cho câu hiện tại
-                    oov_rate = self.calculate_unk_rate(prediction)
-                    all_oov_rates.append(oov_rate)
-                    # --------------------------
+
                     prediction = self.vocab.decode_sentence(prediction)
                     label = self.vocab.decode_sentence(label)
 
@@ -109,13 +101,7 @@ class TextSumTask(BaseTask):
         # Calculate metrics
         self.logger.info("Getting scores")
         scores = evaluation.compute_scores(gts, gens)
-        # --- TÍNH TRUNG BÌNH OOV RATE ---
-        if len(all_oov_rates) > 0:
-            avg_oov = sum(all_oov_rates) / len(all_oov_rates)
-        else:
-            avg_oov = 0.0
     
-        scores['avg_oov_rate'] = avg_oov
         return scores, (gens, gts)
 
     def get_predictions(self):
@@ -142,34 +128,3 @@ class TextSumTask(BaseTask):
         self.logger.info("Test scores %s", scores)
         json.dump(scores, open(os.path.join(self.checkpoint_path, "scores.json"), "w+"), ensure_ascii=False, indent=4)
         json.dump(results, open(os.path.join(self.checkpoint_path, "predictions.json"), "w+"), ensure_ascii=False, indent=4)
-
-    def calculate_unk_rate(self, prediction_tensor: torch.Tensor) -> float:
-        """
-        Tính tỷ lệ xuất hiện token <unk> trong câu dự đoán.
-        prediction_tensor: Shape (1, seq_len) hoặc (seq_len)
-        """
-        # Lấy ID của các token đặc biệt
-        unk_idx = self.vocab.unk_idx
-        pad_idx = self.vocab.pad_idx
-        bos_idx = self.vocab.bos_idx
-        eos_idx = self.vocab.eos_idx
-
-        # 1. Đếm số lượng token <unk>
-        num_unks = (prediction_tensor == unk_idx).sum().item()
-
-        # 2. Tính tổng số token có nghĩa (Loại bỏ PAD, BOS)
-        # Lưu ý: Nếu gặp EOS thì dừng đếm (nếu tensor có padding sau EOS)
-        # Nhưng thường output của predict đã cắt tại EOS hoặc chỉ chứa token sinh ra.
-        
-        # Tạo mask cho các token hợp lệ (Không phải PAD, không phải BOS)
-        valid_mask = (prediction_tensor != pad_idx) & (prediction_tensor != bos_idx)
-        
-        # Nếu muốn loại bỏ cả EOS khỏi mẫu số (để chỉ tính nội dung)
-        valid_mask = valid_mask & (prediction_tensor != eos_idx)
-
-        total_tokens = valid_mask.sum().item()
-
-        if total_tokens == 0:
-            return 0.0
-            
-        return num_unks / total_tokens
