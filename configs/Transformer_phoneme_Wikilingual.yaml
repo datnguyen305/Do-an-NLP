@@ -39,15 +39,15 @@ model:
   # --- SỬA THAM SỐ KHỚP VỚI CODE TRANSFORMER MỚI ---
   encoder:
     n_layers: 6
-    n_heads: 8        # Code dùng n_heads (có s)
-    d_ff: 2048        # Code dùng d_ff (thay vì ffn_hidden)
-    dropout: 0.1      # Code dùng dropout (thay vì drop_prob)
+    n_head: 8        # Code dùng n_heads (có s)
+    ffn_hidden: 2048        # Code dùng d_ff (thay vì ffn_hidden)
+    drop_prob: 0.1      # Code dùng dropout (thay vì drop_prob)
   
   decoder:
     n_layers: 6
-    n_heads: 8
-    d_ff: 2048
-    dropout: 0.1
+    n_head: 8
+    ffn_hidden: 2048
+    drop_prob: 0.1
 
 training:
   checkpoint_path: "checkpoints"
