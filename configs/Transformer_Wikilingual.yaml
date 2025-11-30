@@ -21,32 +21,41 @@ dataset:
     type: TextSumDataset
     path: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/test.json
   batch_size: 16
-  num_workers: 4
+  num_workers: 16
 
 model:
   name: Transformer_Wikilingual
   architecture: TransformerModel
   d_model: 512
+  n_layers: 6
+  n_head: 8
+  ffn_hidden: 2048
+  drop_prob: 0.1
   max_len: 1024
-  device: cuda
-  
   encoder:
+    d_model: 512
+    n_head: 8
+    ffn_hidden: 2048
+    drop_prob: 0.1
     n_layers: 6
-    n_heads: 8        # Code dùng config.encoder.n_heads
-    d_ff: 2048        # Code dùng config.encoder.d_ff
-    dropout: 0.1      # Code dùng config.encoder.dropout
-  
+    max_len: 1024
+    device: cuda
   decoder:
+    d_model: 512
+    n_head: 8
+    ffn_hidden: 2048
+    drop_prob: 0.1
     n_layers: 6
-    n_heads: 8        # Code dùng config.decoder.n_heads
-    d_ff: 2048        # Code dùng config.decoder.d_ff
-    dropout: 0.1      # Code dùng config.decoder.dropout
+    max_len: 1024
+    device: cuda
+  label_smoothing: 0.1
+  device: cuda
 
 training:
   checkpoint_path: "checkpoints"
-  learning_rate: 1   # Lưu ý: Nếu dùng Noam Scheduler thì để 1 hoặc 2. Nếu dùng Adam thường thì giảm xuống 0.0001
+  learning_rate: 0.15   
   lr_coverage: 0.15
-  warmup: 4000       # Transformer thường cần warmup step cao hơn (khoảng 4000)
+  warmup: 1000
   patience: 5
   score: rouge-L
 
