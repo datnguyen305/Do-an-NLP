@@ -56,7 +56,7 @@ model:
 training:
   checkpoint_path: "checkpoints"
   # QUAN TRỌNG: Giảm LR xuống. 0.15 là quá lớn cho Transformer, sẽ gây lỗi.
-  learning_rate: 0.15 
+  learning_rate: 1 
   lr_coverage: 0.15
   warmup: 4000
   patience: 5
