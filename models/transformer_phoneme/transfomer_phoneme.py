@@ -17,7 +17,6 @@ class Transformer_Phoneme_Model(nn.Module):
         self.device = config.device
         self.config = config
         self.vocab = vocab
-        self.MAX_LENGTH = vocab.max_sentence_length + 2
         # 1. EMBEDDING: Input có 4 features (Onset, Medial, Nucleus, Coda)
         self.num_features = 4 
         
@@ -160,7 +159,7 @@ class Transformer_Phoneme_Model(nn.Module):
 
             finished = torch.zeros(bs, dtype=torch.bool, device=self.device)
 
-            for _ in range(self.MAX_LENGTH):
+            for _ in range(config.max_decoding_len):
                 # Decode step
                 tgt_key_padding = self.make_padding_mask(tgt_seq)
                 tgt_causal_mask = self.make_causal_mask(tgt_seq.size(1))
