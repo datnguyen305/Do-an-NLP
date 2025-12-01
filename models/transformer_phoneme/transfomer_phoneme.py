@@ -74,8 +74,15 @@ class Transformer_Phoneme_Model(nn.Module):
         return x + pos
 
     def make_padding_mask(self, x):
-        # x: [B, L, 4]. Check feature đầu (Onset) để biết PAD
-        return (x[:, :, 0] == self.src_pad_idx)
+        # x: [Batch, Len, 4]
+        
+        # Cách 1: Tổng của cả 4 thành phần bằng 0 (chỉ đúng nếu ID luôn >= 0)
+        # return (x.sum(dim=-1) == 0)
+        
+        # Cách 2 (Chuẩn nhất): Kiểm tra xem TẤT CẢ các chiều có bằng PAD_IDX không
+        # (x == 0) trả về [B, L, 4] True/False
+        # .all(dim=-1) trả về [B, L] -> True nếu cả 4 cái đều là 0
+        return (x == self.src_pad_idx).all(dim=-1)
 
     def make_causal_mask(self, sz):
         return torch.triu(torch.ones(sz, sz, device=self.device) * float('-inf'), diagonal=1)

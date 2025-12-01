@@ -158,15 +158,15 @@ class BaseTask:
 
             
 
-            # 3. LƯU METRICS VÀO CHECKPOINT PATH SAU MỖI EPOCH
-            self.logger.info("Saving training metrics")
-            # Lưu Loss của từng batch vào file pickle (hoặc .json)
-            with open(train_losses_path, "wb") as f:
-                pickle.dump(all_train_losses, f)
+            # # 3. LƯU METRICS VÀO CHECKPOINT PATH SAU MỖI EPOCH
+            # self.logger.info("Saving training metrics")
+            # # Lưu Loss của từng batch vào file pickle (hoặc .json)
+            # with open(train_losses_path, "wb") as f:
+            #     pickle.dump(all_train_losses, f)
             
-            # Lưu điểm ROUGE sau mỗi epoch vào file JSON
-            with open(dev_scores_path, "w") as f:
-                json.dump(all_dev_scores, f, ensure_ascii=False, indent=4)
+            # # Lưu điểm ROUGE sau mỗi epoch vào file JSON
+            # with open(dev_scores_path, "w") as f:
+            #     json.dump(all_dev_scores, f, ensure_ascii=False, indent=4)
 
             self.save_checkpoint({
                 "epoch": self.epoch,
@@ -183,9 +183,9 @@ class BaseTask:
                     os.path.join(self.checkpoint_path, "best_model.pth")
                 )
                 
-            if self.epoch >= 1: 
-                self.logger.info('Đã đạt tới Epoch thứ 2. Dừng training theo yêu cầu.')
-                exit_train = True
+            # if self.epoch >= 1: 
+            #     self.logger.info('Đã đạt tới Epoch thứ 2. Dừng training theo yêu cầu.')
+            #     exit_train = True
 
             if exit_train:
                 break
