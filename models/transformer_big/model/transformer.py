@@ -14,9 +14,9 @@ from builders.model_builder import META_ARCHITECTURE
 class TransformerModel(nn.Module):
     def __init__(self, config, vocab: Vocab):
         super().__init__()
-        self.src_pad_idx = config.pad_idx
-        self.trg_pad_idx = config.pad_idx
-        self.trg_sos_idx = config.bos_idx
+        self.src_pad_idx = vocab.pad_idx
+        self.trg_pad_idx = vocab.pad_idx
+        self.trg_sos_idx = vocab.bos_idx
         self.device = config.device
         self.vocab = vocab
         self.max_len = vocab.max_sentence_length + 2
