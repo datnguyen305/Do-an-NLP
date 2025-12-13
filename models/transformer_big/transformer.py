@@ -120,7 +120,7 @@ class TransformerModel(nn.Module):
 
     def predict(self, src: torch.Tensor):
         self.eval()
-        
+        self.max_length = self.vocab.max_sentence_length + 2  # +2 for BOS and EOS
         config = self.config
     
         src = src[:, :config.max_len]
@@ -143,7 +143,7 @@ class TransformerModel(nn.Module):
             tgt_seq = torch.full((B, 1), self.trg_bos_idx, device=src.device, dtype=torch.long)
             finished = torch.zeros(B, dtype=torch.bool, device=src.device)
         
-            for _ in range(config.max_len):
+            for _ in range(self.max_length):
                 tgt_len = tgt_seq.size(1)
                 tgt_padding, tgt_causal = self.make_tgt_mask(tgt_seq)
         
