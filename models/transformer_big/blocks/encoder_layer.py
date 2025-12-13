@@ -14,11 +14,11 @@ class EncoderLayer(nn.Module):
 
     def __init__(self, config, vocab: Vocab):
         super(EncoderLayer, self).__init__()
-        self.attention = MultiHeadAttention(d_model=config.d_model, n_head=config.n_head)
-        self.norm1 = LayerNorm(d_model=config.d_model)
+        self.attention = MultiHeadAttention(config, vocab)
+        self.norm1 = LayerNorm(config, vocab)
         self.dropout1 = nn.Dropout(p=config.drop_prob)
-        self.ffn = PositionwiseFeedForward(d_model=config.d_model, hidden=config.ffn_hidden, drop_prob=config.drop_prob)
-        self.norm2 = LayerNorm(d_model=config.d_model)
+        self.ffn = PositionwiseFeedForward(config, vocab)
+        self.norm2 = LayerNorm(config, vocab)
         self.dropout2 = nn.Dropout(p=config.drop_prob)
 
     def forward(self, x, src_mask):

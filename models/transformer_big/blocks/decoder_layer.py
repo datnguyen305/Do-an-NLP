@@ -15,15 +15,15 @@ class DecoderLayer(nn.Module):
     def __init__(self, config, vocab: Vocab):
         super(DecoderLayer, self).__init__()
         self.config = config
-        self.self_attention = MultiHeadAttention(d_model=config.d_model, n_head=config.n_head)
-        self.norm1 = LayerNorm(d_model=config.d_model)
+        self.self_attention = MultiHeadAttention(config, vocab)
+        self.norm1 = LayerNorm(config, vocab)
         self.dropout1 = nn.Dropout(p=config.drop_prob)
 
-        self.enc_dec_attention = MultiHeadAttention(d_model=config.d_model, n_head=config.n_head)
-        self.norm2 = LayerNorm(d_model=config.d_model)
+        self.enc_dec_attention = MultiHeadAttention(config, vocab)
+        self.norm2 = LayerNorm(config, vocab)
         self.dropout2 = nn.Dropout(p=config.drop_prob)
-        self.ffn = PositionwiseFeedForward(d_model=config.d_model, hidden=config.ffn_hidden, drop_prob=config.drop_prob)
-        self.norm3 = LayerNorm(d_model=config.d_model)
+        self.ffn = PositionwiseFeedForward(config, vocab)
+        self.norm3 = LayerNorm(config, vocab)
         self.dropout3 = nn.Dropout(p=config.drop_prob)
 
     def forward(self, dec, enc, trg_mask, src_mask):
