@@ -32,14 +32,14 @@ model:
   n_head: 8
   ffn_hidden: 2048
   drop_prob: 0.1
-  max_len: 1024
+  max_len: 2048
   encoder:
     d_model: 512
     n_head: 8
     ffn_hidden: 2048
     drop_prob: 0.1
     n_layers: 6
-    max_len: 1024
+    max_len: 2048
     device: cuda
   decoder:
     d_model: 512
@@ -47,7 +47,7 @@ model:
     ffn_hidden: 2048
     drop_prob: 0.1
     n_layers: 6
-    max_len: 1024
+    max_len: 2048
     device: cuda
   label_smoothing: 0.1
   device: cuda
@@ -69,13 +69,13 @@ n_layers: 6
 n_head: 8
 ffn_hidden: 2048
 drop_prob: 0.1
-max_len: 1024
+max_len: 2048
 d_model: 512
 n_head: 8
 ffn_hidden: 2048
 drop_prob: 0.1
 n_layers: 6
-max_len: 1024
+max_len: 2048
 device: cuda
 
 d_model: 512

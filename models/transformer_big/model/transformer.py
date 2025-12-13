@@ -26,6 +26,7 @@ class TransformerModel(nn.Module):
         self.d_model = config.d_model
 
     def forward(self, src, trg):
+        
         src_mask = self.make_src_mask(src)
         trg_mask = self.make_trg_mask(trg)
         enc_src = self.encoder(src, src_mask)
