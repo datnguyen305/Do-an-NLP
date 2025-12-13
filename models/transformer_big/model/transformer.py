@@ -23,7 +23,8 @@ class TransformerModel(nn.Module):
         self.encoder = Encoder(config, vocab)
         self.decoder = Decoder(config, vocab)
         self.loss = nn.CrossEntropyLoss(ignore_index=vocab.pad_idx)
-        
+        self.d_model = config.d_model
+
     def forward(self, src, trg):
         src_mask = self.make_src_mask(src)
         trg_mask = self.make_trg_mask(trg)
