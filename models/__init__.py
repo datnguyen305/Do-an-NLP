@@ -1,2 +1,2 @@
-from .transformer.transformer import TransformerModel
+from .transformer.model.transformer import Transformer
 from .transformer_phoneme.transfomer_phoneme import Transformer_Phoneme_Model
