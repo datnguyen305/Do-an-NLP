@@ -21,7 +21,7 @@ class PositionalEncoding(nn.Module):
         :param device: hardware device setting
         """
         super(PositionalEncoding, self).__init__()
-        self.max_len = vocab.max_sentence_length + 2
+        self.max_len = config.max_len
 
         # same size with input matrix (for adding with input matrix)
         self.encoding = torch.zeros(self.max_len, config.d_model, device=config.device)

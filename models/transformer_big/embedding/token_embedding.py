@@ -19,5 +19,4 @@ class TokenEmbedding(nn.Embedding):
         :param vocab_size: size of vocabulary
         :param d_model: dimensions of model
         """
-        self.max_len = vocab.max_sentence_length + 2
-        super(TokenEmbedding, self).__init__(self.max_len, config.d_model, padding_idx=vocab.pad_idx)
+        super(TokenEmbedding, self).__init__(vocab.vocab_size, config.d_model, padding_idx=vocab.pad_idx)
