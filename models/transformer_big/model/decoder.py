@@ -14,15 +14,8 @@ class Decoder(nn.Module):
     def __init__(self, config, vocab: Vocab):
         super().__init__()
         self.max_len = vocab.max_sentence_length + 2
-        self.emb = TransformerEmbedding(d_model=config.d_model,
-                                        drop_prob=config.drop_prob,
-                                        max_len=self.max_len,
-                                        vocab_size=vocab.vocab_size,
-                                        device=config.device)
-        self.layers = nn.ModuleList([DecoderLayer(d_model=config.d_model,
-                                                  ffn_hidden=config.ffn_hidden,
-                                                  n_head=config.n_head,
-                                                  drop_prob=config.drop_prob)
+        self.emb = TransformerEmbedding(config, vocab)
+        self.layers = nn.ModuleList([DecoderLayer(config, vocab)
                                      for _ in range(config.n_layers)])
 
         self.linear = nn.Linear(config.d_model, vocab.vocab_size)
