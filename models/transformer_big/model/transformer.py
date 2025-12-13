@@ -34,7 +34,11 @@ class TransformerModel(nn.Module):
         loss = self.loss(output.reshape(-1, self.vocab.vocab_size), trg.reshape(-1))
         return output, loss
     
-    def predict(self, src, max_len, start_symbol):
+    def predict(self, src):
+        self.max_len = self.vocab.max_sentence_length + 2
+        max_len = self.max_len
+
+        
         src_mask = self.make_src_mask(src)
         enc_src = self.encoder(src, src_mask)
 
