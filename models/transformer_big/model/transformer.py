@@ -20,23 +20,10 @@ class TransformerModel(nn.Module):
         self.device = config.device
         self.vocab = vocab
         self.max_len = vocab.max_sentence_length + 2
-        self.encoder = Encoder(d_model=config.d_model,
-                               n_head=config.n_head,
-                               max_len=self.max_len,
-                               ffn_hidden=config.ffn_hidden,
-                               enc_voc_size=vocab.vocab_size,
-                               drop_prob=config.drop_prob,
-                               n_layers=config.n_layers,
-                               device=config.device)
-        self.decoder = Decoder(d_model=config.d_model,
-                               n_head=config.n_head,
-                               max_len=self.max_len,
-                               ffn_hidden=config.ffn_hidden,
-                               dec_voc_size=vocab.vocab_size,
-                               drop_prob=config.drop_prob,
-                               n_layers=config.n_layers,
-                               device=config.device)
-
+        self.encoder = Encoder(config, vocab)
+        self.decoder = Decoder(config, vocab)
+        self.loss = nn.CrossEntropyLoss(ignore_index=vocab.pad_idx)
+        
     def forward(self, src, trg):
         src_mask = self.make_src_mask(src)
         trg_mask = self.make_trg_mask(trg)
