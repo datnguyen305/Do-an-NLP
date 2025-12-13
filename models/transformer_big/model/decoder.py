@@ -20,23 +20,38 @@ class Decoder(nn.Module):
 
         self.linear = nn.Linear(config.d_model, vocab.vocab_size)
 
-    def forward(self, trg, enc_src, trg_mask, src_mask, enc_dec_cache, self_attn_cache):
+    def forward(self, trg, enc_src, trg_mask, src_mask, enc_dec_cache=None, self_attn_cache=None):
         trg = self.emb(trg)
-        new_self_attn_cache = []
+        
+        # Nếu đang ở chế độ Training (không có cache), khởi tạo new_self_attn_cache là None.
+        # Nếu ở chế độ Inference (có cache), khởi tạo new_self_attn_cache là list
+        new_self_attn_cache = [] if self_attn_cache is not None else None 
+        
         for i, layer in enumerate(self.layers):
-        # Truyền các tham số cache vào DecoderLayer
-            trg, new_layer_cache = layer(
+            
+            # --- Xử lý tham số cache truyền cho DecoderLayer ---
+            layer_enc_dec_cache = enc_dec_cache[i] if enc_dec_cache is not None else None
+            layer_self_attn_cache = self_attn_cache[i] if self_attn_cache is not None else None
+            
+            # Giả định DecoderLayer đã được sửa để trả về (output, new_cache)
+            output_from_layer, new_layer_cache = layer(
                 trg, 
                 enc_src, 
                 trg_mask, 
                 src_mask,
-                enc_dec_cache[i],        # Cache Encoder-Decoder
-                self_attn_cache[i]       # Cache Self-Attention cũ
+                layer_enc_dec_cache,    
+                layer_self_attn_cache   
             )
-        new_self_attn_cache.append(new_layer_cache)
+            trg = output_from_layer # Cập nhật đầu vào cho lớp tiếp theo
+            
+            # Nếu đang ở chế độ Inference, lưu cache mới
+            if new_self_attn_cache is not None:
+                new_self_attn_cache.append(new_layer_cache)
 
         # pass to LM head
         output = self.linear(trg)
+        
+        # Ở chế độ Training, trả về output và None cho cache
         return output, new_self_attn_cache
 
     def init_encoder_decoder_cache(self, enc_src, src_mask):
