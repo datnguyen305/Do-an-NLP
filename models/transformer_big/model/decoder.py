@@ -15,6 +15,7 @@ class Decoder(nn.Module):
         super().__init__()
         self.max_len = vocab.max_sentence_length + 2
         self.emb = TransformerEmbedding(config, vocab)
+        self.n_layers = config.n_layers
         self.layers = nn.ModuleList([DecoderLayer(config, vocab)
                                      for _ in range(config.n_layers)])
 
