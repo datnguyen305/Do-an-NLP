@@ -57,8 +57,8 @@ class TransformerModel(nn.Module):
 
             if pred_token == self.vocab.eos_idx:
                 break
-        trg_indexes = torch.cat(trg_indexes, dim=1)        
-        return trg_indexes
+        final_trg_tensor = torch.LongTensor(trg_indexes).unsqueeze(0).to(self.device)      
+        return final_trg_tensor
 
     def make_src_mask(self, src):
         src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
