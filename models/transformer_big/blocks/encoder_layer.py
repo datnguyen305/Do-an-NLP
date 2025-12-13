@@ -24,7 +24,7 @@ class EncoderLayer(nn.Module):
     def forward(self, x, src_mask):
         # 1. compute self attention
         _x = x
-        x = self.attention(q=x, k=x, v=x, mask=src_mask)
+        x, _ = self.self_attention(q=_x, k=_x, v=_x, mask=src_mask)
         
         # 2. add and norm
         x = self.dropout1(x)
