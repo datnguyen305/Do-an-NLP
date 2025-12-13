@@ -38,7 +38,7 @@ class TransformerModel(nn.Module):
         self.max_len = self.vocab.max_sentence_length + 2
         max_len = self.max_len
 
-        
+
         src_mask = self.make_src_mask(src)
         enc_src = self.encoder(src, src_mask)
 
@@ -57,7 +57,7 @@ class TransformerModel(nn.Module):
 
             if pred_token == self.vocab.eos_idx:
                 break
-
+        trg_indexes = torch.cat(trg_indexes, dim=1)        
         return trg_indexes
 
     def make_src_mask(self, src):
