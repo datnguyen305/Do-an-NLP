@@ -5,9 +5,9 @@
 """
 from torch import nn
 from vocabs.vocab import Vocab
-from models.layers.layer_norm import LayerNorm
-from models.layers.multi_head_attention import MultiHeadAttention
-from models.layers.position_wise_feed_forward import PositionwiseFeedForward
+from transformer_big.layers.layer_norm import LayerNorm
+from transformer_big.layers.multi_head_attention import MultiHeadAttention
+from transformer_big.layers.position_wise_feed_forward import PositionwiseFeedForward
 
 
 class EncoderLayer(nn.Module):
