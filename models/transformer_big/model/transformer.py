@@ -11,7 +11,7 @@ from .encoder import Encoder
 from builders.model_builder import META_ARCHITECTURE
 
 @META_ARCHITECTURE.register()
-class Transformer(nn.Module):
+class TransformerModel(nn.Module):
     def __init__(self, config, vocab: Vocab):
         super().__init__()
         self.src_pad_idx = config.pad_idx
