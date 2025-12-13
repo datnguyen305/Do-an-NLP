@@ -30,9 +30,10 @@ class TransformerModel(nn.Module):
         src_mask = self.make_src_mask(src)
         trg_mask = self.make_trg_mask(trg)
         enc_src = self.encoder(src, src_mask)
-        output = self.decoder(trg, enc_src, trg_mask, src_mask)
+        output, _ = self.decoder(trg, enc_src, trg_mask, src_mask) 
+        # output hiện tại là Tensor, giờ đã có thể reshape
         loss = self.loss(output.reshape(-1, self.vocab.vocab_size), trg.reshape(-1))
-        return output, loss
+        return output, loss # Trả về output và loss (như cũ)
     
     def predict(self, src):
         """
