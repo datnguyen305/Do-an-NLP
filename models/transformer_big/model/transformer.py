@@ -6,8 +6,8 @@
 import torch
 from torch import nn
 from vocabs.vocab import Vocab
-from transformer_big.model.decoder import Decoder
-from transformer_big.model.decoder import Encoder
+from .decoder import Decoder
+from .encoder import Encoder
 from builders.model_builder import META_ARCHITECTURE
 
 @META_ARCHITECTURE.register()
