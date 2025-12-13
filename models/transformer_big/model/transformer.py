@@ -35,29 +35,64 @@ class TransformerModel(nn.Module):
         return output, loss
     
     def predict(self, src):
-        self.max_len = self.vocab.max_sentence_length + 2
-        max_len = self.max_len
+        """
+        Thực hiện dự đoán (suy luận) bằng Greedy Decoding với kỹ thuật Key-Value Caching
+        để tăng tốc độ.
+        """
+        # Đảm bảo batch size là 1
+        if src.size(0) != 1:
+             raise ValueError("Hàm predict hiện tại chỉ hỗ trợ batch_size = 1")
 
-
+        # 1. KHỞI TẠO ENCODER VÀ CACHE ENCODER-DECODER (TÍNH TOÁN 1 LẦN)
         src_mask = self.make_src_mask(src)
-        enc_src = self.encoder(src, src_mask)
+        enc_src = self.encoder(src, src_mask) 
+        
+        # Giả định self.decoder có hàm init_encoder_decoder_cache để tính K, V của Encoder
+        encoder_decoder_cache = self.decoder.init_encoder_decoder_cache(enc_src, src_mask)
 
-        trg_indexes = [self.vocab.bos_idx]
+        # 2. KHỞI TẠO CACHE DECODER SELF-ATTENTION (CACHE NÀY SẼ ĐƯỢC CẬP NHẬT)
+        # Giả định self.decoder có thuộc tính n_layers
+        decoder_self_attn_cache = [None] * self.decoder.n_layers 
+        
+        # 3. VÒNG LẶP DECODING
+        max_len = self.max_len 
+        trg_indexes = [self.trg_sos_idx] 
 
         for i in range(max_len):
-            trg_tensor = torch.LongTensor(trg_indexes).unsqueeze(0).to(self.device)
+            
+            # ĐẦU VÀO DECODER CHỈ LÀ TOKEN MỚI NHẤT: [1, 1]
+            current_token_idx = trg_indexes[-1] 
+            
+            trg_tensor = torch.tensor([[current_token_idx]], dtype=torch.long, device=self.device)
 
-            trg_mask = self.make_trg_mask(trg_tensor)
+            # Tạo trg_mask cho token hiện tại [1, 1, 1, 1]
+            # Mặc dù seq_len = 1, nhưng ta vẫn tạo mask để đảm bảo tính nhất quán
+            trg_mask = self.make_trg_mask(trg_tensor) 
 
-            output = self.decoder(trg_tensor, enc_src, trg_mask, src_mask)
+            # THỰC HIỆN DECODING VÀ NHẬN LẠI CACHE MỚI
+            # output: [1, 1, vocab_size]
+            # *LƯU Ý: HÀM DECODER PHẢI ĐƯỢC SỬA ĐỔI ĐỂ NHẬN 4 THAM SỐ CUỐI CÙNG NÀY
+            output, decoder_self_attn_cache = self.decoder(
+                trg_tensor, 
+                enc_src, 
+                trg_mask, 
+                src_mask, 
+                encoder_decoder_cache,       # Cache Encoder-Decoder (Không thay đổi)
+                decoder_self_attn_cache      # Cache Self-Attention (Cũ)
+            )
 
-            pred_token = output.argmax(2)[:, -1].item()
+            # Lấy token dự đoán
+            pred_token = output.argmax(2).item() 
 
             trg_indexes.append(pred_token)
 
-            if pred_token == self.vocab.eos_idx:
+            # KIỂM TRA ĐIỀU KIỆN DỪNG
+            if pred_token == self.trg_eos_idx:
                 break
-        final_trg_tensor = torch.LongTensor(trg_indexes).unsqueeze(0).to(self.device)      
+                
+        # 4. KẾT THÚC
+        final_trg_tensor = torch.tensor(trg_indexes, dtype=torch.long, device=self.device).unsqueeze(0)
+        
         return final_trg_tensor
 
     def make_src_mask(self, src):

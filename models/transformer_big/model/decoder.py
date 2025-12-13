@@ -20,12 +20,28 @@ class Decoder(nn.Module):
 
         self.linear = nn.Linear(config.d_model, vocab.vocab_size)
 
-    def forward(self, trg, enc_src, trg_mask, src_mask):
+    def forward(self, trg, enc_src, trg_mask, src_mask, enc_dec_cache, self_attn_cache):
         trg = self.emb(trg)
-
-        for layer in self.layers:
-            trg = layer(trg, enc_src, trg_mask, src_mask)
+        new_self_attn_cache = []
+        for i, layer in enumerate(self.layers):
+        # Truyền các tham số cache vào DecoderLayer
+            trg, new_layer_cache = layer(
+                trg, 
+                enc_src, 
+                trg_mask, 
+                src_mask,
+                enc_dec_cache[i],        # Cache Encoder-Decoder
+                self_attn_cache[i]       # Cache Self-Attention cũ
+            )
+        new_self_attn_cache.append(new_layer_cache)
 
         # pass to LM head
         output = self.linear(trg)
-        return output
+        return output, new_self_attn_cache
+
+    def init_encoder_decoder_cache(self, enc_src, src_mask):
+        cache = []
+        for layer in self.layers: # Giả định self.layers là danh sách các DecoderLayer
+            # Giả định DecoderLayer có hàm init_encoder_decoder_cache
+            cache.append(layer.init_encoder_decoder_cache(enc_src, src_mask))
+        return cache
