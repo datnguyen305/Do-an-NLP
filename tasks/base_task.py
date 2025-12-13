@@ -4,7 +4,7 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import LambdaLR
 from builders.vocab_builder import build_vocab
 from shutil import copyfile
-import json
+
 from utils.logging_utils import setup_logger
 from builders.model_builder import build_model
 
@@ -105,8 +105,6 @@ class BaseTask:
         torch.save(dict_for_saving, os.path.join(self.checkpoint_path, "last_model.pth"))
 
     def start(self):
-        train_losses_path = os.path.join(self.checkpoint_path, "train_batch_losses.pkl")
-        dev_scores_path = os.path.join(self.checkpoint_path, "dev_scores_per_epoch.json")
         if os.path.isfile(os.path.join(self.checkpoint_path, "last_model.pth")):
             checkpoint = self.load_checkpoint(os.path.join(self.checkpoint_path, "last_model.pth"))
             best_score = checkpoint["best_score"]
@@ -114,32 +112,16 @@ class BaseTask:
             self.epoch = checkpoint["epoch"] + 1
             self.optim.load_state_dict(checkpoint['optimizer'])
             self.scheduler.load_state_dict(checkpoint['scheduler'])
-            try:
-                with open(train_losses_path, "rb") as f:
-                    all_train_losses = pickle.load(f)
-                self.logger.info(f"Resumed training history with {len(all_train_losses)} batch losses.")
-            except:
-                self.logger.warning("Could not load previous training losses, starting a new list.")
-            try:
-                with open(dev_scores_path, "r") as f:
-                    all_dev_scores = json.load(f)
-                self.logger.info(f"Resumed dev history with {len(all_dev_scores)} epochs of scores.")
-            except:
-                self.logger.warning("Could not load previous dev scores, starting a new list.")
         else:
             best_score = .0
             patience = 0
-            all_train_losses = [] 
-            all_dev_scores = []
 
         while True:
-            train_losses = self.train()
-            all_train_losses.extend(train_losses)
+            self.train()
             # val scores
             scores, _ = self.evaluate_metrics(self.dev_dataloader)
             self.logger.info("Validation scores %s", scores)
             score = scores[self.score]
-            all_dev_scores.append(scores)
 
             # Prepare for next epoch
             is_the_best_model = False
@@ -156,18 +138,6 @@ class BaseTask:
                 self.logger.info('patience reached.')
                 exit_train = True
 
-            
-
-            # # 3. LƯU METRICS VÀO CHECKPOINT PATH SAU MỖI EPOCH
-            # self.logger.info("Saving training metrics")
-            # # Lưu Loss của từng batch vào file pickle (hoặc .json)
-            # with open(train_losses_path, "wb") as f:
-            #     pickle.dump(all_train_losses, f)
-            
-            # # Lưu điểm ROUGE sau mỗi epoch vào file JSON
-            # with open(dev_scores_path, "w") as f:
-            #     json.dump(all_dev_scores, f, ensure_ascii=False, indent=4)
-
             self.save_checkpoint({
                 "epoch": self.epoch,
                 "best_score": best_score,
@@ -182,10 +152,6 @@ class BaseTask:
                     os.path.join(self.checkpoint_path, "last_model.pth"), 
                     os.path.join(self.checkpoint_path, "best_model.pth")
                 )
-                
-            # if self.epoch >= 1: 
-            #     self.logger.info('Đã đạt tới Epoch thứ 2. Dừng training theo yêu cầu.')
-            #     exit_train = True
 
             if exit_train:
                 break
