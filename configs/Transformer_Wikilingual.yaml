@@ -21,8 +21,8 @@ dataset:
   test: 
     type: TextSumDataset
     path: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/test.json
-  batch_size: 128
-  num_workers: 16
+  batch_size: 64
+  num_workers: 4
 
 model:
   name: Transformer_Wikilingual
