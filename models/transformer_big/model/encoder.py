@@ -5,8 +5,8 @@
 """
 from torch import nn
 from vocabs.vocab import Vocab
-from transformer_big.blocks.encoder_layer import EncoderLayer
-from transformer_big.embedding.transformer_embedding import TransformerEmbedding
+from ..blocks.encoder_layer import EncoderLayer
+from ..embedding.transformer_embedding import TransformerEmbedding
 
 
 class Encoder(nn.Module):

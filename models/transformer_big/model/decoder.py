@@ -6,8 +6,8 @@
 import torch
 from torch import nn
 from vocabs.vocab import Vocab
-from transformer_big.blocks.decoder_layer import DecoderLayer
-from transformer_big.embedding.transformer_embedding import TransformerEmbedding
+from ..blocks.decoder_layer import DecoderLayer
+from ..embedding.transformer_embedding import TransformerEmbedding
 
 
 class Decoder(nn.Module):
