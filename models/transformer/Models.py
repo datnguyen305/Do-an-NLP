@@ -226,8 +226,8 @@ class TransformerModel(nn.Module):
     
     def _model_decode(self, trg_seq, enc_output, src_mask):
         trg_mask = get_subsequent_mask(trg_seq)
-        dec_output, *_ = self.model.decoder(trg_seq, trg_mask, enc_output, src_mask)
-        return self.model.trg_word_prj(dec_output)
+        dec_output, *_ = self.decoder(trg_seq, trg_mask, enc_output, src_mask)
+        return self.trg_word_prj(dec_output)
     
     def predict(self, src_seq):
         ''' 
@@ -245,7 +245,7 @@ class TransformerModel(nn.Module):
             # 1. Mã hóa chuỗi nguồn (Encoder)
             src_mask = get_pad_mask(src_seq, src_pad_idx)
             # enc_output có shape (1, L_src, D)
-            enc_output, *_ = self.model.encoder(src_seq, src_mask)
+            enc_output, *_ = self.encoder(src_seq, src_mask)
             B = src_seq.size(0)
             # Khởi tạo chuỗi đích với token <BOS> (B=1, L=1)
             # gen_seq có shape (1, current_len)
