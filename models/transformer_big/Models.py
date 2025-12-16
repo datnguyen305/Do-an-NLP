@@ -4,7 +4,8 @@ import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
 from transformer.Layers import EncoderLayer, DecoderLayer
-
+from vocabs.vocab import Vocab
+from builders.model_builder import META_ARCHITECTURE
 
 __author__ = "Yu-Hsiang Huang"
 
@@ -117,6 +118,7 @@ class Decoder(nn.Module):
         self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
         self.scale_emb = scale_emb
         self.d_model = d_model
+        
 
     def forward(self, trg_seq, trg_mask, enc_output, src_mask, return_attns=False):
 
@@ -144,7 +146,7 @@ class TransformerModel(nn.Module):
     ''' A sequence to sequence model with attention mechanism. '''
 
     def __init__(
-            self, n_src_vocab, n_trg_vocab, src_pad_idx, trg_pad_idx,
+            self, config, vocab, src_pad_idx = 0, trg_pad_idx=0,
             d_word_vec=512, d_model=512, d_inner=2048,
             n_layers=6, n_head=8, d_k=64, d_v=64, dropout=0.1, n_position=200,
             trg_emb_prj_weight_sharing=True, emb_src_trg_weight_sharing=True,
@@ -163,25 +165,27 @@ class TransformerModel(nn.Module):
         #   'emb': multiply \sqrt{d_model} to embedding output
         #   'prj': multiply (\sqrt{d_model} ^ -1) to linear projection output
         #   'none': no multiplication
-
+        self.vocab = Vocab
+        self.n_src_vocab =  vocab.vocab_size
+        self.n_src_vocab = vocab.vocab_size
         assert scale_emb_or_prj in ['emb', 'prj', 'none']
         scale_emb = (scale_emb_or_prj == 'emb') if trg_emb_prj_weight_sharing else False
         self.scale_prj = (scale_emb_or_prj == 'prj') if trg_emb_prj_weight_sharing else False
         self.d_model = d_model
-
+        self.loss = nn.CrossEntropyLoss()
         self.encoder = Encoder(
-            n_src_vocab=n_src_vocab, n_position=n_position,
+            n_src_vocab=self.n_src_vocab, n_position=n_position,
             d_word_vec=d_word_vec, d_model=d_model, d_inner=d_inner,
             n_layers=n_layers, n_head=n_head, d_k=d_k, d_v=d_v,
             pad_idx=src_pad_idx, dropout=dropout, scale_emb=scale_emb)
 
         self.decoder = Decoder(
-            n_trg_vocab=n_trg_vocab, n_position=n_position,
+            n_trg_vocab=self.n_trg_vocab, n_position=n_position,
             d_word_vec=d_word_vec, d_model=d_model, d_inner=d_inner,
             n_layers=n_layers, n_head=n_head, d_k=d_k, d_v=d_v,
             pad_idx=trg_pad_idx, dropout=dropout, scale_emb=scale_emb)
 
-        self.trg_word_prj = nn.Linear(d_model, n_trg_vocab, bias=False)
+        self.trg_word_prj = nn.Linear(d_model, self.n_trg_vocab, bias=False)
 
         for p in self.parameters():
             if p.dim() > 1:
@@ -211,15 +215,20 @@ class TransformerModel(nn.Module):
 
         if self.scale_prj:
             seq_logit *= self.d_model ** -0.5
+        
+        loss = self.loss(
+            seq_logit.contiguous().view(-1, seq_logit.size(-1)),
+            trg_seq.contiguous().view(-1)
+        )
 
-        return seq_logit.view(-1, seq_logit.size(2)) # Flatten for the loss function
+        return  # Flatten for the loss function
     
     def _model_decode(self, trg_seq, enc_output, src_mask):
         trg_mask = get_subsequent_mask(trg_seq)
         dec_output, *_ = self.model.decoder(trg_seq, trg_mask, enc_output, src_mask)
         return self.model.trg_word_prj(dec_output)
     
-    def predict_greedy(self, src_seq):
+    def predict(self, src_seq):
         ''' 
         Dự đoán đầu ra cho chuỗi đầu vào src_seq (chỉ hỗ trợ batch size = 1) 
         sử dụng Greedy Decoding.
