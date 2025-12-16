@@ -277,6 +277,6 @@ class TransformerModel(nn.Module):
                 if next_word_id == trg_eos_idx:
                     break
             
-            outputs = torch.cat(outputs, dim=-1)
+            outputs = torch.stack(outputs, dim=1)
             return outputs
         
