@@ -148,7 +148,7 @@ class TransformerModel(nn.Module):
     def __init__(
             self, config, vocab, src_pad_idx = 0, trg_pad_idx=0,
             d_word_vec=512, d_model=512, d_inner=2048,
-            n_layers=6, n_head=8, d_k=64, d_v=64, dropout=0.1, n_position=2042,
+            n_layers=6, n_head=8, d_k=64, d_v=64, dropout=0.1, n_position=4096,
             trg_emb_prj_weight_sharing=True, emb_src_trg_weight_sharing=True,
             scale_emb_or_prj='prj'):
 
