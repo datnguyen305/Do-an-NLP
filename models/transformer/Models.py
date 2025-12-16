@@ -155,7 +155,8 @@ class TransformerModel(nn.Module):
         super().__init__()
 
         self.src_pad_idx, self.trg_pad_idx = src_pad_idx, trg_pad_idx
-
+        self.n_trg_vocab = vocab.vocab_size
+        self.n_src_vocab = vocab.vocab_size
         # In section 3.4 of paper "Attention Is All You Need", there is such detail:
         # "In our model, we share the same weight matrix between the two
         # embedding layers and the pre-softmax linear transformation...
