@@ -165,7 +165,7 @@ class TransformerModel(nn.Module):
         #   'emb': multiply \sqrt{d_model} to embedding output
         #   'prj': multiply (\sqrt{d_model} ^ -1) to linear projection output
         #   'none': no multiplication
-        self.vocab = Vocab
+        self.vocab = vocab
         self.n_src_vocab =  vocab.vocab_size
         self.n_src_vocab = vocab.vocab_size
         assert scale_emb_or_prj in ['emb', 'prj', 'none']
@@ -237,7 +237,7 @@ class TransformerModel(nn.Module):
         assert src_seq.size(0) == 1
 
         src_pad_idx, trg_eos_idx = self.src_pad_idx, self.trg_eos_idx 
-        max_seq_len = self.max_seq_len
+        max_seq_len = self.vocab.max_sentence_length + 2  # +2 for BOS and EOS
         device = src_seq.device
         
         with torch.no_grad():
