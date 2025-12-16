@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
-from transformer.Layers import EncoderLayer, DecoderLayer
+from .Layers import EncoderLayer, DecoderLayer
 from vocabs.vocab import Vocab
 from builders.model_builder import META_ARCHITECTURE
 
