@@ -47,7 +47,7 @@ class MultiHeadAttention(nn.Module):
             mask = mask.unsqueeze(1)   # For head axis broadcasting.
 
         # Pre-attention layer normalization is good for model's backpropagation
-        q = self.layer_norm(q)
+        
 
         q, attn = self.attention(q, k, v, mask=mask)
 
@@ -56,6 +56,7 @@ class MultiHeadAttention(nn.Module):
         q = q.transpose(1, 2).reshape(sz_b, len_q, -1)
         q = self.dropout(self.fc(q))
         q += residual
+        q = self.layer_norm(q)
     
         return q, attn
 
@@ -75,11 +76,11 @@ class PositionwiseFeedForward(nn.Module):
         residual = x
 
         # Pre-feed forward layer normalization is good for model's backpropagation, LLama
-        x = self.layer_norm(x)
+        
         x = self.w_2(F.relu(self.w_1(x)))
         x = self.dropout(x)
         x += residual
-
+        x = self.layer_norm(x)
         
 
         return x
