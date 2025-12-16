@@ -249,7 +249,7 @@ class TransformerModel(nn.Module):
             B = src_seq.size(0)
             # Khởi tạo chuỗi đích với token <BOS> (B=1, L=1)
             # gen_seq có shape (1, current_len)
-            gen_seq = torch.empty(B, 1, dtype=torch.long, device=enc_output.device).fill_(self.trg_bos_idx)
+            gen_seq = torch.empty(B, 1, dtype=torch.long, device=enc_output.device).fill_(self.vocab.bos_idx)
 
 
             # 2. Vòng lặp giải mã Tham Lam (Decoder)
