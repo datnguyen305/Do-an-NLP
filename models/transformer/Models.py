@@ -237,7 +237,7 @@ class TransformerModel(nn.Module):
         # Chỉ chấp nhận batch size bằng 1
         assert src_seq.size(0) == 1
 
-        src_pad_idx, trg_eos_idx = self.src_pad_idx, self.trg_eos_idx 
+        src_pad_idx, trg_eos_idx = self.vocab.pad_idx, self.vocab.eos_idx 
         max_seq_len = self.vocab.max_sentence_length + 2  # +2 for BOS and EOS
         device = src_seq.device
         
