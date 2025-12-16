@@ -222,7 +222,7 @@ class TransformerModel(nn.Module):
             trg_seq.contiguous().view(-1)
         )
 
-        return  # Flatten for the loss function
+        return _, loss # Flatten for the loss function
     
     def _model_decode(self, trg_seq, enc_output, src_mask):
         trg_mask = get_subsequent_mask(trg_seq)
