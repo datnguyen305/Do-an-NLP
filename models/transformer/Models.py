@@ -250,7 +250,7 @@ class TransformerModel(nn.Module):
             # Khởi tạo chuỗi đích với token <BOS> (B=1, L=1)
             # gen_seq có shape (1, current_len)
             gen_seq = torch.empty(B, 1, dtype=torch.long, device=enc_output.device).fill_(self.vocab.bos_idx)
-
+            outputs = []
 
             # 2. Vòng lặp giải mã Tham Lam (Decoder)
             for step in range(max_seq_len):
@@ -263,7 +263,7 @@ class TransformerModel(nn.Module):
                 # Chọn token có xác suất cao nhất (Tham Lam)
                 # next_word_id có shape (1, 1)
                 _, next_word_id = torch.max(next_word_probs, dim=-1)
-                
+                outputs.append(next_word_id)
                 # Lấy giá trị token (dạng scalar)
                 next_word_id = next_word_id.squeeze().item()
                 
@@ -277,7 +277,6 @@ class TransformerModel(nn.Module):
                 if next_word_id == trg_eos_idx:
                     break
             
-            # Trả về chuỗi token (loại bỏ token <BOS> đầu tiên)
-            # Lưu ý: nếu bạn muốn giữ lại BOS, hãy bỏ [1:]
-            return gen_seq.squeeze(0).tolist()[1:]
+            outputs = torch.cat(outputs, dim=1)
+            return outputs
         
