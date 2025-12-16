@@ -141,7 +141,7 @@ class Decoder(nn.Module):
             return dec_output, dec_slf_attn_list, dec_enc_attn_list
         return dec_output,
 
-
+@META_ARCHITECTURE.register()
 class TransformerModel(nn.Module):
     ''' A sequence to sequence model with attention mechanism. '''
 
